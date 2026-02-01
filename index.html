@@ -1,361 +1,325 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  CheckCircle2, 
-  ClipboardCheck, 
-  BookOpen, 
-  Users, 
-  Layout, 
-  ShieldCheck, 
-  Printer, 
-  RefreshCcw, 
-  Heart, 
-  Star, 
-  ChevronLeft,
-  FileText,
-  Sparkles,
-  MessageSquare,
-  Award,
-  Sun
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>연수 기획서 자기평가 체크리스트</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel CDN (for JSX compilation in browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
+        body { font-family: 'Pretendard', sans-serif; }
+        .print-only { display: none; }
+        @media print {
+            .no-print { display: none; }
+            .print-only { display: block; }
+            body { background: white; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-const TrainingChecklist = () => {
-  const [view, setView] = useState('form'); // 'form' or 'report'
-  const [checkedItems, setCheckedItems] = useState({});
-  const [notes, setNotes] = useState({
-    title: '',
-    goal: '',
-    target: '',
-    curriculum: '',
-    ethics: ''
-  });
-  const [progress, setProgress] = useState(0);
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-  // 질문 리스트
-  const categories = [
-    {
-      id: 'title',
-      title: '강좌명',
-      icon: <BookOpen className="w-6 h-6 text-emerald-800" />,
-      items: [
-        '차별성이 있고 학습자의 호기심을 유발하는 제목인가?',
-        '제목이 강의 내용과 일치하는가?',
-        '제목이 지나치게 광범위하지 않은가?'
-      ]
-    },
-    {
-      id: 'goal',
-      title: '목표 및 계획',
-      icon: <ClipboardCheck className="w-6 h-6 text-emerald-800" />,
-      items: [
-        '현직 교사에게 왜 필요한 연수인지 설명되어 있는가?',
-        '연수 목표가 명확하게 드러나는가?',
-        '연수의 핵심 메시지가 한 문장으로 떠오르는가?'
-      ]
-    },
-    {
-      id: 'target',
-      title: '연수 대상 이해',
-      icon: <Users className="w-6 h-6 text-emerald-800" />,
-      items: [
-        '연수 대상(경력, 학교급, 상황)을 고려한 설계인가?',
-        '교사들의 실제 고민과 맞닿아 있는가?'
-      ]
-    },
-    {
-      id: 'curriculum',
-      title: '커리큘럼 설계',
-      icon: <Layout className="w-6 h-6 text-emerald-800" />,
-      items: [
-        '시작 5분 내 동기유발 활동이 포함되어 있는가?',
-        '전체 흐름(도입-전개-마무리)이 자연스럽고 체계적인가?',
-        '시간 배분이 현실적인가?',
-        '연수 방법의 선택이 목표와 연결되어 있는가? (이론/토의토론/실습의 배분)',
-        '학습자의 참여할 수 있는 활동 및 상호작용이 포함되어 있는가?',
-        '단순 정보 나열이 아니라, 학습자의 몰입과 사고 전환을 이끄는 구조가 있는가?',
-        '이미 알고 있는 교사와 처음 접하는 교사 모두 의미 있는 배움을 얻을 수 있도록 설계되었는가?',
-        '학습목표와 무관한 불필요한 내용이 없는가?',
-        '연수 후 현장에 바로 적용 가능한 결과물/운영 팁이 포함되어 있는가?',
-        '예상되는 변수, 문제 상황의 plan B가 있는가? (기술 오류, 참여 저조, 시간 초과 등)'
-      ]
-    },
-    {
-      id: 'ethics',
-      title: '윤리성',
-      icon: <ShieldCheck className="w-6 h-6 text-emerald-800" />,
-      items: [
-        '저작권 및 개인정보 보호(출처, 초상권, 개인정보 등) 유의사항을 고려하였는가?'
-      ]
-    }
-  ];
+        // 아이콘 컴포넌트 (SVG 직접 정의)
+        // SyntaxError 해결: 인접한 JSX 엘리먼트들을 <> </> (Fragment)로 감쌌습니다.
+        const Icon = ({ name, className = "w-6 h-6", fill = "none" }) => {
+            const icons = {
+                heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
+                star: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />,
+                check: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" /></>,
+                clipboard: <><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></>,
+                book: <><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /></>,
+                users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+                layout: <><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9" /></>,
+                shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />,
+                printer: <><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14" rx="1" ry="1" /></>,
+                refresh: <><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5" /></>,
+                file: <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14.5 2 14.5 7.5 20 7.5" /></>,
+                chevronLeft: <path d="m15 18-6-6 6-6" />,
+                sparkles: <><path d="m12 3 1.91 5.82L19.82 10.73 13.91 12.64 12 18.45 10.09 12.64 4.18 10.73 10.09 8.82 12 3Z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M21 17v4"/><path d="M19 19h4" /></>,
+                message: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+                award: <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></>,
+                sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41" /></>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name]}
+                </svg>
+            );
+        };
 
-  const totalItems = categories.reduce((acc, cat) => acc + cat.items.length, 0);
+        const TrainingChecklist = () => {
+            const [view, setView] = useState('form');
+            const [checkedItems, setCheckedItems] = useState({});
+            const [notes, setNotes] = useState({ title: '', goal: '', target: '', curriculum: '', ethics: '' });
+            const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-    setProgress(Math.round((checkedCount / totalItems) * 100));
-  }, [checkedItems, totalItems]);
+            const categories = [
+                {
+                    id: 'title',
+                    title: '강좌명',
+                    icon: 'book',
+                    items: [
+                        '차별성이 있고 학습자의 호기심을 유발하는 제목인가?',
+                        '제목이 강의 내용과 일치하는가?',
+                        '제목이 지나치게 광범위하지 않은가?'
+                    ]
+                },
+                {
+                    id: 'goal',
+                    title: '목표 및 계획',
+                    icon: 'clipboard',
+                    items: [
+                        '현직 교사에게 왜 필요한 연수인지 설명되어 있는가?',
+                        '연수 목표가 명확하게 드러나는가?',
+                        '연수의 핵심 메시지가 한 문장으로 떠오르는가?'
+                    ]
+                },
+                {
+                    id: 'target',
+                    title: '연수 대상 이해',
+                    icon: 'users',
+                    items: [
+                        '연수 대상(경력, 학교급, 상황)을 고려한 설계인가?',
+                        '교사들의 실제 고민과 맞닿아 있는가?'
+                    ]
+                },
+                {
+                    id: 'curriculum',
+                    title: '커리큘럼 설계',
+                    icon: 'layout',
+                    items: [
+                        '시작 5분 내 동기유발 활동이 포함되어 있는가?',
+                        '전체 흐름(도입-전개-마무리)이 자연스럽고 체계적인가?',
+                        '시간 배분이 현실적인가?',
+                        '연수 방법의 선택이 목표와 연결되어 있는가? (이론/토의토론/실습의 배분)',
+                        '학습자의 참여할 수 있는 활동 및 상호작용이 포함되어 있는가?',
+                        '단순 정보 나열이 아니라, 학습자의 몰입과 사고 전환을 이끄는 구조가 있는가?',
+                        '이미 알고 있는 교사와 처음 접하는 교사 모두 의미 있는 배움을 얻을 수 있도록 설계되었는가?',
+                        '학습목표와 무관한 불필요한 내용이 없는가?',
+                        '연수 후 현장에 바로 적용 가능한 결과물/운영 팁이 포함되어 있는가?',
+                        '예상되는 변수, 문제 상황의 plan B가 있는가? (기술 오류, 참여 저조, 시간 초과 등)'
+                    ]
+                },
+                {
+                    id: 'ethics',
+                    title: '윤리성',
+                    icon: 'shield',
+                    items: [
+                        '저작권 및 개인정보 보호(출처, 초상권, 개인정보 등) 유의사항을 고려하였는가?'
+                    ]
+                }
+            ];
 
-  const handleCheck = (catId, index) => {
-    const key = `${catId}-${index}`;
-    setCheckedItems(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+            const totalItems = categories.reduce((acc, cat) => acc + cat.items.length, 0);
 
-  const handleNoteChange = (catId, value) => {
-    setNotes(prev => ({
-      ...prev,
-      [catId]: value
-    }));
-  };
+            useEffect(() => {
+                const checkedCount = Object.values(checkedItems).filter(Boolean).length;
+                setProgress(Math.round((checkedCount / totalItems) * 100));
+            }, [checkedItems]);
 
-  const resetAll = () => {
-    if (window.confirm('모든 기록을 초기화하시겠습니까?')) {
-      setCheckedItems({});
-      setNotes({ title: '', goal: '', target: '', curriculum: '', ethics: '' });
-      setProgress(0);
-    }
-  };
+            const handleCheck = (catId, index) => {
+                const key = `${catId}-${index}`;
+                setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
+            };
 
-  const getGrade = () => {
-    if (progress >= 90) return { title: '마스터 기획자', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' };
-    if (progress >= 70) return { title: '준비된 강사', color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200' };
-    return { title: '성장하는 연수 전문가', color: 'text-cyan-700', bg: 'bg-cyan-50', border: 'border-cyan-200' };
-  };
+            const handleNoteChange = (catId, value) => {
+                setNotes(prev => ({ ...prev, [catId]: value }));
+            };
 
-  // --- 메인 화면 (Deep Green Theme) ---
-  if (view === 'form') {
-    return (
-      <div className="min-h-screen bg-[#F0F5F2] text-slate-800 p-4 md:p-8 font-sans transition-colors duration-500">
-        <header className="max-w-4xl mx-auto mb-10 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="bg-[#064E3B] p-4 rounded-3xl shadow-lg">
-              <Heart className="w-8 h-8 text-white fill-emerald-200" />
-            </div>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-black mb-3 text-[#064E3B] tracking-tight">
-            연수 기획서 자기평가
-          </h1>
-          <p className="text-emerald-700/70 text-lg font-medium">
-            품격 있는 연수를 위한 전문가의 체크리스트
-          </p>
-        </header>
+            const resetAll = () => {
+                if (window.confirm('모든 기록을 초기화하시겠습니까?')) {
+                    setCheckedItems({});
+                    setNotes({ title: '', goal: '', target: '', curriculum: '', ethics: '' });
+                    setProgress(0);
+                    window.scrollTo(0, 0);
+                }
+            };
 
-        <div className="max-w-4xl mx-auto mb-12 sticky top-4 z-20">
-          <div className="bg-white rounded-[2rem] shadow-2xl p-6 border border-emerald-100/50 backdrop-blur-xl bg-white/95">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-bold text-[#1E293B] flex items-center gap-2">
-                <Star className="w-4 h-4 fill-[#1E293B]" /> 연수 완성도
-              </span>
-              <span className="text-lg font-black text-[#1E293B]">{progress}%</span>
-            </div>
-            <div className="w-full bg-slate-100 h-5 rounded-full overflow-hidden border border-slate-200 p-1">
-              <div 
-                className="bg-[#1E293B] h-full transition-all duration-1000 ease-out rounded-full"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-            <p className="text-center text-sm text-[#064E3B] mt-4 font-bold animate-pulse">
-              하나씩 체크하며 연수를 설계해 보세요.
-            </p>
-          </div>
-        </div>
+            const getGrade = () => {
+                if (progress >= 90) return { title: '마스터 기획자', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' };
+                if (progress >= 70) return { title: '준비된 강사', color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200' };
+                return { title: '성장하는 연수 전문가', color: 'text-cyan-700', bg: 'bg-cyan-50', border: 'border-cyan-200' };
+            };
 
-        <main className="max-w-4xl mx-auto space-y-12 pb-20">
-          {categories.map((category) => (
-            <section key={category.id}>
-              <div className="flex items-center gap-3 mb-5 ml-2">
-                <div className="p-2.5 bg-[#064E3B] rounded-2xl shadow-md">
-                  {React.cloneElement(category.icon, { className: "w-6 h-6 text-white" })}
-                </div>
-                <h2 className="text-2xl font-extrabold text-[#064E3B]">{category.title}</h2>
-              </div>
-              
-              <div className="bg-white rounded-[2.5rem] border border-emerald-100 shadow-xl p-6 md:p-10">
-                <ul className="space-y-4 mb-10">
-                  {category.items.map((item, idx) => {
-                    const itemKey = `${category.id}-${idx}`;
-                    const isChecked = checkedItems[itemKey];
-                    return (
-                      <li 
-                        key={idx}
-                        onClick={() => handleCheck(category.id, idx)}
-                        className={`flex items-start gap-5 p-5 rounded-3xl cursor-pointer transition-all duration-300 
-                          ${isChecked ? 'bg-emerald-50/70' : 'bg-slate-50 hover:bg-white border border-transparent hover:border-emerald-100'}`}
-                      >
-                        <div className={`mt-0.5 transform ${isChecked ? 'text-[#064E3B] scale-110' : 'text-slate-300'}`}>
-                          <CheckCircle2 className={`w-7 h-7 ${isChecked ? 'fill-emerald-100' : ''}`} />
-                        </div>
-                        <span className={`text-[17px] leading-relaxed transition-all ${isChecked ? 'text-emerald-900/30 line-through' : 'text-slate-700 font-semibold'}`}>
-                          {item}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+            const checkedTotal = Object.values(checkedItems).filter(Boolean).length;
 
-                <div className="relative pt-6 border-t border-emerald-50">
-                  <div className="flex items-center gap-2 mb-3 ml-1">
-                    <MessageSquare className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">성찰 및 보완 메모</span>
-                  </div>
-                  <textarea
-                    value={notes[category.id]}
-                    onChange={(e) => handleNoteChange(category.id, e.target.value)}
-                    placeholder="기획을 보완하기 위해 기록해야 할 것이 있나요?"
-                    className="w-full h-32 p-6 rounded-[1.5rem] border-none bg-emerald-50/30 focus:bg-white focus:ring-4 focus:ring-emerald-100 outline-none resize-none text-slate-700 text-[15px] font-medium transition-all"
-                  />
-                </div>
-              </div>
-            </section>
-          ))}
-
-          <div className="flex flex-col md:flex-row gap-5 justify-center py-10">
-            <button 
-              onClick={() => setView('report')}
-              className="group flex items-center justify-center gap-3 px-12 py-6 bg-[#064E3B] text-white rounded-[2rem] font-black text-lg hover:bg-emerald-800 transition-all shadow-2xl active:scale-95"
-            >
-              <FileText className="w-6 h-6" />
-              기획 리포트 확인하기
-            </button>
-            <button 
-              onClick={resetAll}
-              className="px-8 py-6 bg-white text-emerald-900/40 border border-emerald-100 rounded-[2rem] font-bold hover:bg-emerald-50 transition-all"
-            >
-              <RefreshCcw className="w-5 h-5 inline mr-2" /> 초기화
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // --- 리포트 화면 (Sky Blue Theme) ---
-  const grade = getGrade();
-  const checkedTotal = Object.values(checkedItems).filter(Boolean).length;
-
-  return (
-    <div className="min-h-screen bg-sky-50 text-slate-800 p-6 md:p-12 animate-in slide-in-from-bottom duration-700 selection:bg-sky-200">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between items-center mb-10 print:hidden">
-          <button 
-            onClick={() => setView('form')}
-            className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-bold transition-all hover:-translate-x-1"
-          >
-            <ChevronLeft className="w-5 h-5" /> 기획 수정하기
-          </button>
-          <button 
-            onClick={() => window.print()}
-            className="flex items-center gap-3 px-8 py-4 bg-blue-700 text-white rounded-2xl font-black hover:bg-blue-800 shadow-xl transition-all active:scale-95"
-          >
-            <Printer className="w-5 h-5" /> 리포트 저장/인쇄
-          </button>
-        </div>
-
-        <div className="border-[8px] border-white shadow-2xl p-8 md:p-16 rounded-[4rem] bg-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-sky-100 rounded-full -mr-20 -mt-20 blur-3xl opacity-50"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-100 rounded-full -ml-10 -mb-10 blur-3xl opacity-50"></div>
-
-          <div className="relative z-10">
-            <div className="text-center mb-14">
-              <div className="inline-block px-5 py-1.5 bg-blue-600 text-white rounded-full text-[10px] font-black mb-5 tracking-[0.3em] shadow-lg shadow-blue-200">
-                BRIGHT FUTURE REPORT
-              </div>
-              <h1 className="text-4xl font-black text-blue-900 mb-3">연수 기획 성장 리포트</h1>
-              <p className="text-sky-600 font-bold flex items-center justify-center gap-2 italic">
-                <Sun className="w-5 h-5 text-amber-400" /> 선생님의 연수가 더 눈부시게 빛날 준비를 마쳤습니다.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-              <div className="bg-sky-50 p-8 rounded-[2.5rem] border border-sky-100 text-center shadow-inner">
-                <p className="text-xs text-sky-400 font-black mb-2 uppercase tracking-tighter">현재 기획 달성도</p>
-                <p className="text-6xl font-black text-blue-900">{progress}<span className="text-2xl ml-1">%</span></p>
-              </div>
-              <div className={`${grade.bg} ${grade.border} p-8 rounded-[2.5rem] text-center flex flex-col items-center justify-center border-2 border-dashed shadow-sm`}>
-                <Award className={`w-10 h-10 mb-2 ${grade.color}`} />
-                <p className="text-xs font-bold text-slate-400 uppercase mb-1">기획 전문가 등급</p>
-                <p className={`text-2xl font-black ${grade.color}`}>{grade.title}</p>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-blue-700 to-sky-600 text-white p-8 rounded-[2rem] mb-12 flex items-center gap-6 shadow-xl shadow-blue-100">
-              <div className="bg-white/20 p-3 rounded-2xl">
-                <Sparkles className="w-10 h-10 text-sky-200" />
-              </div>
-              <div>
-                <p className="text-sm font-bold opacity-90 mb-0.5">나의 특별한 성장 포인트</p>
-                <p className="text-xl font-black">
-                  이미 <span className="text-sky-200 underline underline-offset-4">{checkedTotal}가지</span>의 보석 같은 기획을 완벽하게 준비하셨습니다!
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-12">
-              {categories.map(cat => {
-                const unchecked = cat.items.filter((_, idx) => !checkedItems[`${cat.id}-${idx}`]);
-                if (unchecked.length === 0 && !notes[cat.id]) return null;
-
+            if (view === 'form') {
                 return (
-                  <div key={cat.id} className="relative">
-                    <div className="flex items-center justify-between mb-5 border-b-2 border-sky-100 pb-3">
-                      <h3 className="font-black text-2xl text-blue-900 flex items-center gap-2">
-                        <div className="w-3 h-3 bg-sky-400 rounded-full"></div>
-                        {cat.title}
-                      </h3>
-                    </div>
-                    
-                    <div className="pl-6 space-y-8">
-                      {unchecked.length > 0 && (
-                        <div className="bg-sky-50/50 p-6 rounded-3xl border border-sky-100">
-                          <p className="text-[11px] font-black text-blue-500 uppercase mb-4 flex items-center gap-2">
-                            <Star className="w-4 h-4 fill-blue-400 text-blue-400" /> 더 생각해보면 좋을 부분
-                          </p>
-                          <ul className="grid grid-cols-1 gap-3">
-                            {unchecked.map((item, idx) => (
-                              <li key={idx} className="text-[16px] text-slate-700 font-semibold flex items-start gap-3 group">
-                                <div className="w-1.5 h-1.5 bg-blue-300 rounded-full mt-2.5 shrink-0 group-hover:bg-blue-500 transition-colors"></div>
-                                {item}
-                              </li>
+                    <div className="min-h-screen bg-[#F0F5F2] text-slate-800 p-4 md:p-8">
+                        <header className="max-w-4xl mx-auto mb-10 text-center">
+                            <div className="flex justify-center mb-4">
+                                <div className="bg-[#064E3B] p-4 rounded-3xl shadow-lg">
+                                    <Icon name="heart" className="w-8 h-8 text-white" fill="rgba(167, 243, 208, 0.5)" />
+                                </div>
+                            </div>
+                            <h1 className="text-3xl md:text-4xl font-black mb-3 text-[#064E3B]">연수 기획서 자기평가</h1>
+                            <p className="text-emerald-700/70 text-lg font-medium">품격 있는 연수를 위한 전문가의 체크리스트</p>
+                        </header>
+
+                        <div className="max-w-4xl mx-auto mb-12 sticky top-4 z-20">
+                            <div className="bg-white rounded-[2rem] shadow-2xl p-6 border border-emerald-100/50 backdrop-blur-xl bg-white/95">
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-sm font-bold text-[#1E293B] flex items-center gap-2">
+                                        <Icon name="star" className="w-4 h-4 text-[#1E293B]" fill="#1E293B" /> 연수 완성도
+                                    </span>
+                                    <span className="text-lg font-black text-[#1E293B]">{progress}%</span>
+                                </div>
+                                <div className="w-full bg-slate-100 h-5 rounded-full overflow-hidden border border-slate-200 p-1">
+                                    <div className="bg-[#1E293B] h-full transition-all duration-1000 ease-out rounded-full" style={{ width: `${progress}%` }}></div>
+                                </div>
+                                <p className="text-center text-sm text-[#064E3B] mt-4 font-bold animate-pulse">하나씩 체크하며 연수를 설계해 보세요.</p>
+                            </div>
+                        </div>
+
+                        <main className="max-w-4xl mx-auto space-y-12 pb-20">
+                            {categories.map((category) => (
+                                <section key={category.id}>
+                                    <div className="flex items-center gap-3 mb-5 ml-2">
+                                        <div className="p-2.5 bg-[#064E3B] rounded-2xl shadow-md">
+                                            <Icon name={category.icon} className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h2 className="text-2xl font-extrabold text-[#064E3B]">{category.title}</h2>
+                                    </div>
+                                    <div className="bg-white rounded-[2.5rem] border border-emerald-100 shadow-xl p-6 md:p-10">
+                                        <ul className="space-y-4 mb-10">
+                                            {category.items.map((item, idx) => {
+                                                const itemKey = `${category.id}-${idx}`;
+                                                const isChecked = checkedItems[itemKey];
+                                                return (
+                                                    <li key={idx} onClick={() => handleCheck(category.id, idx)}
+                                                        className={`flex items-start gap-5 p-5 rounded-3xl cursor-pointer transition-all duration-300 ${isChecked ? 'bg-emerald-50/70' : 'bg-slate-50 hover:bg-white border border-transparent hover:border-emerald-100'}`}>
+                                                        <div className={`mt-0.5 transform ${isChecked ? 'text-[#064E3B] scale-110' : 'text-slate-300'}`}>
+                                                            <Icon name="check" className={`w-7 h-7 ${isChecked ? 'text-emerald-600' : 'text-slate-300'}`} fill={isChecked ? 'rgba(209, 250, 229, 0.5)' : 'none'} />
+                                                        </div>
+                                                        <span className={`text-[17px] leading-relaxed transition-all ${isChecked ? 'text-emerald-900/30 line-through' : 'text-slate-700 font-semibold'}`}>{item}</span>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                        <div className="relative pt-6 border-t border-emerald-50">
+                                            <div className="flex items-center gap-2 mb-3 ml-1">
+                                                <Icon name="message" className="w-4 h-4 text-emerald-600" />
+                                                <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">성찰 및 보완 메모</span>
+                                            </div>
+                                            <textarea value={notes[category.id]} onChange={(e) => handleNoteChange(category.id, e.target.value)}
+                                                placeholder="기획을 보완하기 위해 기록해야 할 것이 있나요?"
+                                                className="w-full h-32 p-6 rounded-[1.5rem] border-none bg-emerald-50/30 focus:bg-white focus:ring-4 focus:ring-emerald-100 outline-none resize-none text-slate-700 text-[15px] font-medium transition-all" />
+                                        </div>
+                                    </div>
+                                </section>
                             ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {notes[cat.id] && (
-                        <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-sky-200 relative">
-                          <div className="absolute -top-3 left-6 px-3 bg-white text-[10px] font-black text-sky-400 uppercase tracking-widest">
-                            나의 소중한 생각들
-                          </div>
-                          <p className="text-[16px] text-blue-900/80 leading-relaxed font-bold whitespace-pre-wrap italic">
-                            "{notes[cat.id]}"
-                          </p>
-                        </div>
-                      )}
+                            <div className="flex flex-col md:flex-row gap-5 justify-center py-10">
+                                <button onClick={() => { setView('report'); window.scrollTo(0,0); }} className="flex items-center justify-center gap-3 px-12 py-6 bg-[#064E3B] text-white rounded-[2rem] font-black text-lg hover:bg-emerald-800 transition-all shadow-2xl active:scale-95">
+                                    <Icon name="file" className="w-6 h-6" /> 기획 리포트 확인하기
+                                </button>
+                                <button onClick={resetAll} className="px-8 py-6 bg-white text-emerald-900/40 border border-emerald-100 rounded-[2rem] font-bold hover:bg-emerald-50 transition-all">
+                                    <Icon name="refresh" className="w-5 h-5 inline mr-2" /> 초기화
+                                </button>
+                            </div>
+                        </main>
                     </div>
-                  </div>
                 );
-              })}
-            </div>
+            }
 
-            <div className="mt-20 pt-12 border-t border-sky-100 text-center">
-              <div className="flex justify-center gap-1.5 mb-6">
-                 {[1,2,3,4,5].map(i => <div key={i} className={`w-2 h-2 rounded-full ${i === 3 ? 'bg-blue-600 w-8' : 'bg-sky-200'}`}></div>)}
-              </div>
-              <p className="text-slate-400 text-sm font-medium">
-                본 리포트는 선생님의 기획이 현장의 온기가 되어 전달되기를 바라는 마음으로 작성되었습니다.
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <footer className="mt-12 text-center text-sky-400 text-xs pb-12 font-bold tracking-widest">
-          EST. {new Date().getFullYear()} EDUCATIONAL DESIGN SUPPORT SYSTEM
-        </footer>
-      </div>
-    </div>
-  );
-};
+            const grade = getGrade();
+            return (
+                <div className="min-h-screen bg-sky-50 text-slate-800 p-6 md:p-12 animate-in slide-in-from-bottom duration-700">
+                    <div className="max-w-3xl mx-auto">
+                        <div className="flex justify-between items-center mb-10 no-print">
+                            <button onClick={() => setView('form')} className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-bold">
+                                <Icon name="chevronLeft" className="w-5 h-5" /> 기획 수정하기
+                            </button>
+                            <button onClick={() => window.print()} className="flex items-center gap-3 px-8 py-4 bg-blue-700 text-white rounded-2xl font-black hover:bg-blue-800 shadow-xl transition-all">
+                                <Icon name="printer" className="w-5 h-5" /> 리포트 저장/인쇄
+                            </button>
+                        </div>
 
-export default TrainingChecklist;
+                        <div className="border-[8px] border-white shadow-2xl p-8 md:p-16 rounded-[4rem] bg-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-sky-100 rounded-full -mr-20 -mt-20 blur-3xl opacity-50"></div>
+                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-100 rounded-full -ml-10 -mb-10 blur-3xl opacity-50"></div>
+                            <div className="relative z-10">
+                                <div className="text-center mb-14">
+                                    <div className="inline-block px-5 py-1.5 bg-blue-600 text-white rounded-full text-[10px] font-black mb-5 tracking-[0.3em] shadow-lg shadow-blue-200">BRIGHT FUTURE REPORT</div>
+                                    <h1 className="text-4xl font-black text-blue-900 mb-3">연수 기획 성장 리포트</h1>
+                                    <p className="text-sky-600 font-bold flex items-center justify-center gap-2 italic">
+                                        <Icon name="sun" className="w-5 h-5 text-amber-400" /> 선생님의 연수가 더 눈부시게 빛날 준비를 마쳤습니다.
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                                    <div className="bg-sky-50 p-8 rounded-[2.5rem] border border-sky-100 text-center">
+                                        <p className="text-xs text-sky-400 font-black mb-2 uppercase">현재 기획 달성도</p>
+                                        <p className="text-6xl font-black text-blue-900">{progress}<span className="text-2xl ml-1">%</span></p>
+                                    </div>
+                                    <div className={`${grade.bg} ${grade.border} p-8 rounded-[2.5rem] text-center flex flex-col items-center justify-center border-2 border-dashed`}>
+                                        <Icon name="award" className={`w-10 h-10 mb-2 ${grade.color}`} />
+                                        <p className="text-xs font-bold text-slate-400 mb-1 uppercase">기획 전문가 등급</p>
+                                        <p className={`text-2xl font-black ${grade.color}`}>{grade.title}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-gradient-to-r from-blue-700 to-sky-600 text-white p-8 rounded-[2rem] mb-12 flex items-center gap-6 shadow-xl shadow-blue-100">
+                                    <div className="bg-white/20 p-3 rounded-2xl"><Icon name="sparkles" className="w-10 h-10 text-sky-200" /></div>
+                                    <div>
+                                        <p className="text-sm font-bold opacity-90 mb-0.5">나의 특별한 성장 포인트</p>
+                                        <p className="text-xl font-black">이미 <span className="text-sky-200 underline underline-offset-4">{checkedTotal}가지</span>의 보석 같은 기획을 완벽하게 준비하셨습니다!</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-12">
+                                    {categories.map(cat => {
+                                        const unchecked = cat.items.filter((_, idx) => !checkedItems[`${cat.id}-${idx}`]);
+                                        if (unchecked.length === 0 && !notes[cat.id]) return null;
+                                        return (
+                                            <div key={cat.id} className="relative">
+                                                <div className="flex items-center justify-between mb-5 border-b-2 border-sky-100 pb-3">
+                                                    <h3 className="font-black text-2xl text-blue-900">{cat.title}</h3>
+                                                </div>
+                                                <div className="pl-6 space-y-8">
+                                                    {unchecked.length > 0 && (
+                                                        <div className="bg-sky-50/50 p-6 rounded-3xl border border-sky-100">
+                                                            <p className="text-[11px] font-black text-blue-500 uppercase mb-4 flex items-center gap-2">
+                                                                <Icon name="star" className="w-4 h-4 text-blue-400" fill="currentColor" /> 더 생각해보면 좋을 부분
+                                                            </p>
+                                                            <ul className="grid grid-cols-1 gap-3">
+                                                                {unchecked.map((item, idx) => (
+                                                                    <li key={idx} className="text-[16px] text-slate-700 font-semibold flex items-start gap-3">
+                                                                        <div className="w-1.5 h-1.5 bg-blue-300 rounded-full mt-2.5 shrink-0"></div> {item}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                    {notes[cat.id] && (
+                                                        <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-sky-200 relative">
+                                                            <div className="absolute -top-3 left-6 px-3 bg-white text-[10px] font-black text-sky-400 uppercase tracking-widest">나의 소중한 생각들</div>
+                                                            <p className="text-[16px] text-blue-900/80 leading-relaxed font-bold whitespace-pre-wrap italic">"{notes[cat.id]}"</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="mt-20 pt-12 border-t border-sky-100 text-center">
+                                    <p className="text-slate-400 text-sm font-medium">본 리포트는 선생님의 기획이 현장의 온기가 되어 전달되기를 바라는 마음으로 작성되었습니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <footer className="mt-12 text-center text-sky-400 text-xs pb-12 font-bold tracking-widest uppercase">EST. 2026 EDUCATIONAL DESIGN SUPPORT SYSTEM</footer>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<TrainingChecklist />);
+    </script>
+</body>
+</html>
