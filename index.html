@@ -9,17 +9,23 @@
     <!-- React & ReactDOM CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel CDN (for JSX compilation in browser) -->
+    <!-- Babel CDN -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
         body { font-family: 'Pretendard', sans-serif; }
+        .no-print { display: block; }
         .print-only { display: none; }
         @media print {
             .no-print { display: none; }
             .print-only { display: block; }
             body { background: white; padding: 0; }
         }
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -28,25 +34,24 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // 아이콘 컴포넌트 (SVG 직접 정의)
-        const Icon = ({ name, className = "w-6 h-6", fill = "none" }) => {
+        const Icon = ({ name, className = "w-5 h-5", fill = "none" }) => {
             const icons = {
                 heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
                 star: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />,
-                check: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" /></>,
-                clipboard: <><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></>,
-                book: <><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /></>,
-                users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
-                layout: <><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9" /></>,
+                check: <React.Fragment><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" /></React.Fragment>,
+                clipboard: <React.Fragment><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></React.Fragment>,
+                book: <React.Fragment><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /></React.Fragment>,
+                users: <React.Fragment><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75" /></React.Fragment>,
+                layout: <React.Fragment><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9" /></React.Fragment>,
                 shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />,
-                printer: <><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14" rx="1" ry="1" /></>,
-                refresh: <><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5" /></>,
-                file: <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14.5 2 14.5 7.5 20 7.5" /></>,
+                printer: <React.Fragment><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14" rx="1" ry="1" /></React.Fragment>,
+                refresh: <React.Fragment><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5" /></React.Fragment>,
+                file: <React.Fragment><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14.5 2 14.5 7.5 20 7.5" /></React.Fragment>,
                 chevronLeft: <path d="m15 18-6-6 6-6" />,
-                sparkles: <><path d="m12 3 1.91 5.82L19.82 10.73 13.91 12.64 12 18.45 10.09 12.64 4.18 10.73 10.09 8.82 12 3Z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M21 17v4"/><path d="M19 19h4" /></>,
+                sparkles: <React.Fragment><path d="m12 3 1.91 5.82L19.82 10.73 13.91 12.64 12 18.45 10.09 12.64 4.18 10.73 10.09 8.82 12 3Z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M21 17v4"/><path d="M19 19h4" /></React.Fragment>,
                 message: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
-                award: <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></>,
-                sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41" /></>
+                award: <React.Fragment><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></React.Fragment>,
+                sun: <React.Fragment><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41" /></React.Fragment>
             };
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -153,70 +158,70 @@
 
             if (view === 'form') {
                 return (
-                    <div className="min-h-screen bg-[#F0F5F2] text-slate-800 p-4 md:p-8">
-                        <header className="max-w-4xl mx-auto mb-10 text-center">
-                            <div className="flex justify-center mb-4">
-                                <div className="bg-[#064E3B] p-4 rounded-3xl shadow-lg">
-                                    <Icon name="heart" className="w-8 h-8 text-white" fill="rgba(167, 243, 208, 0.5)" />
+                    <div className="min-h-screen bg-[#F0F5F2] text-slate-800 p-3 md:p-6 no-print flex flex-col">
+                        <header className="max-w-3xl mx-auto mb-6 text-center">
+                            <div className="flex justify-center mb-3">
+                                <div className="bg-[#064E3B] p-3 rounded-2xl shadow-md">
+                                    <Icon name="heart" className="w-6 h-6 text-white" fill="rgba(167, 243, 208, 0.5)" />
                                 </div>
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-black mb-3 text-[#064E3B]">연수 기획서 자기평가</h1>
-                            <p className="text-emerald-700/70 text-lg font-medium">품격 있는 연수를 위한 전문가의 체크리스트</p>
+                            <h1 className="text-2xl md:text-3xl font-black mb-1 text-[#064E3B]">연수 기획서 자기평가</h1>
+                            <p className="text-emerald-700/70 text-base font-medium">품격 있는 연수를 위한 전문가의 체크리스트</p>
                         </header>
 
-                        <div className="max-w-4xl mx-auto mb-12 sticky top-4 z-20">
-                            <div className="bg-white rounded-[2rem] shadow-2xl p-6 border border-emerald-100/50 backdrop-blur-xl bg-white/95">
-                                <div className="flex justify-between items-center mb-3">
-                                    <span className="text-sm font-bold text-[#1E293B] flex items-center gap-2">
-                                        <Icon name="star" className="w-4 h-4 text-[#1E293B]" fill="#1E293B" /> 연수 완성도
+                        <div className="max-w-3xl mx-auto mb-8 sticky top-2 z-20">
+                            <div className="bg-white rounded-2xl shadow-xl p-4 border border-emerald-100/50 backdrop-blur-xl bg-white/95">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold text-[#1E293B] flex items-center gap-2">
+                                        <Icon name="star" className="w-3.5 h-3.5 text-[#1E293B]" fill="#1E293B" /> 연수 완성도
                                     </span>
-                                    <span className="text-lg font-black text-[#1E293B]">{progress}%</span>
+                                    <span className="text-base font-black text-[#1E293B]">{progress}%</span>
                                 </div>
-                                <div className="w-full bg-slate-100 h-5 rounded-full overflow-hidden border border-slate-200 p-1">
+                                <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
                                     <div className="bg-[#1E293B] h-full transition-all duration-1000 ease-out rounded-full" style={{ width: `${progress}%` }}></div>
                                 </div>
-                                <p className="text-center text-sm text-[#064E3B] mt-4 font-bold animate-pulse">하나씩 체크하며 연수를 설계해 보세요.</p>
+                                <p className="text-center text-xs text-[#064E3B] mt-2 font-bold opacity-80">하나씩 체크하며 연수를 설계해 보세요.</p>
                             </div>
                         </div>
 
-                        <main className="max-w-4xl mx-auto space-y-12 pb-20">
+                        <main className="max-w-3xl mx-auto space-y-6 pb-12 flex-grow">
                             {categories.map((category) => (
                                 <section key={category.id}>
-                                    <div className="flex items-center gap-3 mb-5 ml-2">
-                                        <div className="p-2.5 bg-[#064E3B] rounded-2xl shadow-md">
-                                            <Icon name={category.icon} className="w-6 h-6 text-white" />
+                                    <div className="flex items-center gap-2 mb-2.5 ml-1">
+                                        <div className="p-1.5 bg-[#064E3B] rounded-xl shadow-sm">
+                                            <Icon name={category.icon} className="w-4 h-4 text-white" />
                                         </div>
-                                        <h2 className="text-2xl font-extrabold text-[#064E3B]">{category.title}</h2>
+                                        <h2 className="text-lg font-extrabold text-[#064E3B]">{category.title}</h2>
                                     </div>
-                                    <div className="bg-white rounded-[2.5rem] border border-emerald-100 shadow-xl p-6 md:p-10">
-                                        <ul className="space-y-4 mb-10">
+                                    <div className="bg-white rounded-2xl border border-emerald-100 shadow-md p-4 md:p-6 transition-all">
+                                        <ul className="space-y-2 mb-6">
                                             {category.items.map((item, idx) => {
                                                 const itemKey = `${category.id}-${idx}`;
                                                 const isChecked = checkedItems[itemKey];
                                                 return (
                                                     <li key={idx} onClick={() => handleCheck(category.id, idx)}
-                                                        className={`flex items-start gap-5 p-5 rounded-3xl cursor-pointer transition-all duration-300 ${isChecked ? 'bg-emerald-50/70' : 'bg-slate-50 hover:bg-white border border-transparent hover:border-emerald-100'}`}>
+                                                        className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ${isChecked ? 'bg-emerald-50/50' : 'bg-slate-50 hover:bg-white border border-transparent hover:border-emerald-100'}`}>
                                                         <div className={`mt-0.5 transform ${isChecked ? 'text-[#064E3B] scale-110' : 'text-slate-300'}`}>
-                                                            <Icon name="check" className={`w-7 h-7 ${isChecked ? 'text-emerald-600' : 'text-slate-300'}`} fill={isChecked ? 'rgba(209, 250, 229, 0.5)' : 'none'} />
+                                                            <Icon name="check" className={`w-5 h-5 ${isChecked ? 'text-emerald-600' : 'text-slate-300'}`} fill={isChecked ? 'rgba(209, 250, 229, 0.5)' : 'none'} />
                                                         </div>
-                                                        <span className={`text-[17px] leading-relaxed transition-all ${isChecked ? 'text-emerald-900/30 line-through' : 'text-slate-700 font-semibold'}`}>{item}</span>
+                                                        <span className={`text-[15px] leading-tight transition-all ${isChecked ? 'text-emerald-900/30 line-through' : 'text-slate-700 font-semibold'}`}>{item}</span>
                                                     </li>
                                                 );
                                             })}
                                         </ul>
-                                        <div className="relative pt-6 border-t border-emerald-50">
-                                            <div className="flex items-center gap-2 mb-3 ml-1">
-                                                <Icon name="message" className="w-4 h-4 text-emerald-600" />
-                                                <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">성찰 및 보완 메모</span>
+                                        <div className="relative pt-4 border-t border-emerald-50">
+                                            <div className="flex items-center gap-1.5 mb-2 ml-1">
+                                                <Icon name="message" className="w-3.5 h-3.5 text-emerald-600" />
+                                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">성찰 및 보완 메모</span>
                                             </div>
                                             <textarea value={notes[category.id]} onChange={(e) => handleNoteChange(category.id, e.target.value)}
-                                                placeholder="기획을 보완하기 위해 기록해야 할 것이 있나요?"
-                                                className="w-full h-32 p-6 rounded-[1.5rem] border-none bg-emerald-50/30 focus:bg-white focus:ring-4 focus:ring-emerald-100 outline-none resize-none text-slate-700 text-[15px] font-medium transition-all" />
+                                                placeholder="보완할 아이디어를 기록하세요..."
+                                                className="w-full h-24 p-4 rounded-xl border-none bg-emerald-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-100 outline-none resize-none text-slate-700 text-sm font-medium transition-all" />
                                         </div>
                                     </div>
                                 </section>
                             ))}
-                            <div className="flex flex-col md:flex-row gap-5 justify-center py-10">
+                            <div className="flex flex-col md:flex-row gap-3 justify-center py-6">
                                 <button onClick={() => { setView('report'); window.scrollTo(0,0); }} className="flex items-center justify-center gap-3 px-12 py-6 bg-[#064E3B] text-white rounded-[2rem] font-black text-lg hover:bg-emerald-800 transition-all shadow-2xl active:scale-95">
                                     <Icon name="file" className="w-6 h-6" /> 기획 리포트 확인하기
                                 </button>
@@ -225,99 +230,85 @@
                                 </button>
                             </div>
                         </main>
+                        
+                        {/* 제작자 정보 (매우 흐린 회색) */}
+                        <div className="max-w-3xl mx-auto w-full text-right pb-4 px-4">
+                            <span className="text-slate-400 opacity-20 text-[10px] font-medium tracking-tight select-none">작성자 : 강보람, 신다윤</span>
+                        </div>
                     </div>
                 );
             }
 
             const grade = getGrade();
             return (
-                <div className="min-h-screen bg-sky-50 text-slate-800 p-6 md:p-12 animate-in slide-in-from-bottom duration-700 selection:bg-sky-200">
-                    <div className="max-w-3xl mx-auto">
-                        <div className="flex justify-between items-center mb-10 no-print">
-                            <button onClick={() => setView('form')} className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-bold transition-all hover:-translate-x-1">
-                                <Icon name="chevronLeft" className="w-5 h-5" /> 기획 수정하기
+                <div className="min-h-screen bg-sky-50 text-slate-800 p-2 md:p-6 animate-in slide-in-from-bottom duration-700 selection:bg-sky-200 flex flex-col">
+                    <div className="max-w-2xl mx-auto w-full flex-grow">
+                        <div className="flex justify-between items-center mb-3 no-print">
+                            <button onClick={() => setView('form')} className="flex items-center gap-1 text-blue-800 hover:text-blue-600 font-bold text-xs transition-all hover:-translate-x-1">
+                                <Icon name="chevronLeft" className="w-4 h-4" /> 기획 수정
                             </button>
-                            <button onClick={() => window.print()} className="flex items-center gap-3 px-8 py-4 bg-blue-700 text-white rounded-2xl font-black hover:bg-blue-800 shadow-xl transition-all active:scale-95">
-                                <Icon name="printer" className="w-5 h-5" /> 리포트 저장/인쇄
+                            <button onClick={() => window.print()} className="flex items-center gap-1.5 px-5 py-2.5 bg-blue-700 text-white rounded-lg font-black hover:bg-blue-800 shadow-md transition-all text-xs">
+                                <Icon name="printer" className="w-3.5 h-3.5" /> 저장 / 인쇄
                             </button>
                         </div>
 
-                        <div className="border-[8px] border-white shadow-2xl p-8 md:p-16 rounded-[4rem] bg-white relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-sky-100 rounded-full -mr-20 -mt-20 blur-3xl opacity-50"></div>
-                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-100 rounded-full -ml-10 -mb-10 blur-3xl opacity-50"></div>
-
+                        <div className="border-[2px] border-white shadow-xl p-4 md:p-8 rounded-3xl bg-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-sky-100 rounded-full -mr-12 -mt-12 blur-3xl opacity-40"></div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-100 rounded-full -ml-8 -mb-8 blur-3xl opacity-40"></div>
                             <div className="relative z-10">
-                                <div className="text-center mb-14">
-                                    <div className="inline-block px-5 py-1.5 bg-blue-600 text-white rounded-full text-[10px] font-black mb-5 tracking-[0.3em] shadow-lg shadow-blue-200">BRIGHT FUTURE REPORT</div>
-                                    <h1 className="text-4xl font-black text-blue-900 mb-3">연수 기획 성장 리포트</h1>
-                                    <p className="text-sky-600 font-bold flex items-center justify-center gap-2 italic">
-                                        <Icon name="sun" className="w-5 h-5 text-amber-400" /> 선생님의 연수가 더 눈부시게 빛날 준비를 마쳤습니다.
+                                <div className="text-center mb-4">
+                                    <div className="inline-block px-3 py-0.5 bg-blue-600 text-white rounded-full text-[7px] font-black mb-2 tracking-[0.2em] shadow-sm">GROWTH REPORT</div>
+                                    <h1 className="text-2xl font-black text-blue-900 mb-1">연수 기획 성장 리포트</h1>
+                                    <p className="text-sky-600 font-bold flex items-center justify-center gap-1.5 text-xs italic">
+                                        <Icon name="sun" className="w-3.5 h-3.5 text-amber-400" /> 선생님의 연수가 더 눈부시게 빛날 준비를 마쳤습니다.
                                     </p>
                                 </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                                    <div className="bg-sky-50 p-8 rounded-[2.5rem] border border-sky-100 text-center shadow-inner">
-                                        <p className="text-xs text-sky-400 font-black mb-2 uppercase tracking-tighter">현재 기획 달성도</p>
-                                        <p className="text-6xl font-black text-blue-900">{progress}<span className="text-2xl ml-1">%</span></p>
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div className="bg-sky-50 p-4 rounded-2xl border border-sky-100 text-center shadow-inner">
+                                        <p className="text-[9px] text-sky-400 font-black mb-0.5 uppercase tracking-tighter">현재 달성도</p>
+                                        <p className="text-3xl font-black text-blue-900">{progress}<span className="text-lg ml-0.5">%</span></p>
                                     </div>
-                                    <div className={`${grade.bg} ${grade.border} p-8 rounded-[2.5rem] text-center flex flex-col items-center justify-center border-2 border-dashed shadow-sm`}>
-                                        <Icon name="award" className={`w-10 h-10 mb-2 ${grade.color}`} />
-                                        <p className="text-xs font-bold text-slate-400 mb-1 uppercase tracking-widest">기획 전문가 등급</p>
-                                        <p className={`text-2xl font-black ${grade.color}`}>{grade.title}</p>
+                                    <div className={`${grade.bg} ${grade.border} p-4 rounded-2xl text-center flex flex-col items-center justify-center border-2 border-dashed shadow-sm`}>
+                                        <Icon name="award" className={`w-7 h-7 mb-0.5 ${grade.color}`} />
+                                        <p className="text-[9px] font-bold text-slate-400 mb-0.5 uppercase tracking-widest">전문가 등급</p>
+                                        <p className={`text-lg font-black ${grade.color}`}>{grade.title}</p>
                                     </div>
                                 </div>
-
-                                <div className="bg-gradient-to-r from-blue-700 to-sky-600 text-white p-8 rounded-[2rem] mb-12 flex items-center gap-6 shadow-xl shadow-blue-100">
-                                    <div className="bg-white/20 p-3 rounded-2xl">
-                                        <Icon name="sparkles" className="w-10 h-10 text-sky-200" />
-                                    </div>
+                                <div className="bg-gradient-to-r from-blue-700 to-sky-600 text-white p-4 rounded-xl mb-4 flex items-center gap-4 shadow-md">
+                                    <div className="bg-white/20 p-2 rounded-lg shrink-0"><Icon name="sparkles" className="w-7 h-7 text-sky-200" /></div>
                                     <div>
-                                        <p className="text-sm font-bold opacity-90 mb-0.5">나의 특별한 성장 포인트</p>
-                                        <p className="text-xl font-black">
-                                            이미 <span className="text-sky-200 underline underline-offset-4">{checkedTotal}가지</span>의 보석 같은 기획을 완벽하게 준비하셨습니다!
-                                        </p>
+                                        <p className="text-[10px] font-bold opacity-90 mb-0.5 uppercase">성장 포인트</p>
+                                        <p className="text-base font-black leading-tight">이미 <span className="text-sky-200 underline underline-offset-2 font-black">{checkedTotal}가지</span>의 보석 같은 기획을 완벽하게 준비하셨습니다!</p>
                                     </div>
                                 </div>
-
-                                <div className="space-y-12">
+                                <div className="space-y-4">
                                     {categories.map(cat => {
                                         const unchecked = cat.items.filter((_, idx) => !checkedItems[`${cat.id}-${idx}`]);
                                         if (unchecked.length === 0 && !notes[cat.id]) return null;
-
                                         return (
                                             <div key={cat.id} className="relative">
-                                                <div className="flex items-center justify-between mb-5 border-b-2 border-sky-100 pb-3">
-                                                    <h3 className="font-black text-2xl text-blue-900 flex items-center gap-2">
-                                                        <div className="w-3 h-3 bg-sky-400 rounded-full"></div>
-                                                        {cat.title}
-                                                    </h3>
+                                                <div className="flex items-center justify-between mb-1.5 border-b border-sky-100 pb-1">
+                                                    <h3 className="font-black text-base text-blue-900">{cat.title}</h3>
                                                 </div>
-                                                
-                                                <div className="pl-6 space-y-8">
+                                                <div className="pl-3 space-y-3">
                                                     {unchecked.length > 0 && (
-                                                        <div className="bg-sky-50/50 p-6 rounded-3xl border border-sky-100">
-                                                            <p className="text-[11px] font-black text-blue-500 uppercase mb-4 flex items-center gap-2">
-                                                                <Icon name="star" className="w-4 h-4 text-blue-400" fill="currentColor" /> 더 생각해보면 좋을 부분
+                                                        <div className="bg-sky-50/50 p-3 rounded-xl border border-sky-100">
+                                                            <p className="text-[8px] font-black text-blue-500 uppercase mb-2 flex items-center gap-1.5">
+                                                                <Icon name="star" className="w-3 h-3 text-blue-400" fill="currentColor" /> 더 생각해보면 좋을 부분
                                                             </p>
-                                                            <ul className="grid grid-cols-1 gap-3">
+                                                            <ul className="grid grid-cols-1 gap-1.5">
                                                                 {unchecked.map((item, idx) => (
-                                                                    <li key={idx} className="text-[16px] text-slate-700 font-semibold flex items-start gap-3 group">
-                                                                        <div className="w-1.5 h-1.5 bg-blue-300 rounded-full mt-2.5 shrink-0 group-hover:bg-blue-500 transition-colors"></div>
-                                                                        {item}
+                                                                    <li key={idx} className="text-xs text-slate-600 font-semibold flex items-start gap-2">
+                                                                        <div className="w-1 h-1 bg-blue-300 rounded-full mt-1.5 shrink-0"></div> {item}
                                                                     </li>
                                                                 ))}
                                                             </ul>
                                                         </div>
                                                     )}
-
                                                     {notes[cat.id] && (
-                                                        <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-sky-200 relative">
-                                                            <div className="absolute -top-3 left-6 px-3 bg-white text-[10px] font-black text-sky-400 uppercase tracking-widest">
-                                                                나의 소중한 생각들
-                                                            </div>
-                                                            <p className="text-[16px] text-blue-900/80 leading-relaxed font-bold whitespace-pre-wrap italic">
-                                                                "{notes[cat.id]}"
-                                                            </p>
+                                                        <div className="bg-white p-3 rounded-xl border border-dashed border-sky-200 relative">
+                                                            <div className="absolute -top-2 left-3 px-2 bg-white text-[8px] font-black text-sky-400 uppercase">기록된 생각들</div>
+                                                            <p className="text-xs text-blue-900/80 leading-snug font-bold whitespace-pre-wrap italic">"{notes[cat.id]}"</p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -325,15 +316,17 @@
                                         );
                                     })}
                                 </div>
-
-                                <div className="mt-20 pt-12 border-t border-sky-100 text-center">
-                                    <p className="text-slate-400 text-sm font-medium">
-                                        본 리포트는 선생님의 기획이 현장의 온기가 되어 전달되기를 바라는 마음으로 작성되었습니다.
-                                    </p>
+                                <div className="mt-8 pt-4 border-t border-sky-100 text-center">
+                                    <p className="text-slate-400 text-[8px] font-medium opacity-70 italic tracking-wider">본 리포트는 선생님의 기획이 현장의 온기가 되어 전달되기를 응원합니다.</p>
                                 </div>
                             </div>
                         </div>
-                        <footer className="mt-12 text-center text-sky-400 text-xs pb-12 font-bold tracking-widest uppercase">EST. 2026 EDUCATIONAL DESIGN SUPPORT SYSTEM</footer>
+                        <footer className="mt-4 text-center text-sky-400 text-[8px] pb-6 font-bold tracking-[0.2em] uppercase">EST. 2026 EDUCATIONAL DESIGN SUPPORT SYSTEM</footer>
+                    </div>
+                    
+                    {/* 제작자 정보 (매우 흐린 회색) */}
+                    <div className="max-w-2xl mx-auto w-full text-right pb-4 px-4">
+                        <span className="text-slate-400 opacity-20 text-[10px] font-medium tracking-tight select-none">작성자 : 강보람, 신다윤</span>
                     </div>
                 </div>
             );
